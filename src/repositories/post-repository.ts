@@ -84,11 +84,7 @@ class PostRepository {
   }
 
   public static async setFijada(id: number, fijada: boolean): Promise<PublicacionRow | undefined> {
-    const [row] = await knex<PublicacionRow>(TABLE)
-      .where({ id })
-      .whereNull("eliminado_en")
-      .update({ fijada, updated_at: knex.fn.now() })
-      .returning("*");
+    const [row] = await knex<PublicacionRow>(TABLE).where({ id }).whereNull("eliminado_en").update({ fijada }).returning("*");
 
     return row as PublicacionRow | undefined;
   }
