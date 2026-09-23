@@ -11,6 +11,7 @@ import postRouter from "./routers/post-router";
 import authenticate from "./middlewares/authenticate";
 import handleError from "./middlewares/handle-error";
 import openapi from "./docs/openapi";
+import eventsRouter from "./routers/events-router";
 
 const globalRateLimiter = rateLimit({
   windowMs: config.rateLimit.windowMs,
@@ -56,6 +57,7 @@ class Server {
       this.app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openapi));
     }
 
+    this.app.use("/api/v1/publicaciones/eventos", eventsRouter());
     this.app.use("/api/v1/publicaciones", postRouter());
   }
 }
