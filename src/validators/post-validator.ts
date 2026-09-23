@@ -12,7 +12,7 @@ const vigenciaHastaSchema = z
 
 export const createPublicacionSchema = z.object({
   titulo: z.string().trim().min(1, "El titulo es obligatorio.").max(150, "El titulo supera los 150 caracteres."),
-  cuerpo: z.string().trim().min(1, "El cuerpo es obligatorio."),
+  cuerpo: z.string().trim().min(1, "El cuerpo es obligatorio.").max(10_000, "El cuerpo supera los 10000 caracteres."),
   categoria: z.enum(CATEGORIAS_PUBLICACION),
   vigenciaHasta: vigenciaHastaSchema,
 });
