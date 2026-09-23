@@ -4,11 +4,14 @@ on:
   pull_request:
     branches: [main, qa, develop]
   push:
-    branches: [main]
+    branches: [main, qa, develop]
 
 jobs:
   qodana:
     runs-on: ubuntu-latest
+    # qodana-js (a diferencia de qodana-jvm-community) necesita un QODANA_TOKEN
+    # gratuito de qodana.cloud; sin el, se salta el job en vez de fallar el PR.
+    if: ${{ vars.QODANA_ENABLED == 'true' }}
     permissions:
       contents: write
       pull-requests: write
@@ -21,6 +24,8 @@ jobs:
 
       - name: Qodana Scan
         uses: JetBrains/qodana-action@v2025.2
+        env:
+          QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
         with:
           pr-mode: true
           use-caches: true
