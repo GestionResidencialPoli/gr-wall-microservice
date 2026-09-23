@@ -133,6 +133,9 @@ jobs:
     name: Build y desplegar
     needs: [build-and-check, docker-smoke-test]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: read
+      packages: write
     uses: GestionResidencialPoli/gr-infra/.github/workflows/build-push.yml@main
     with:
       service-name: gr-wall-microservice
