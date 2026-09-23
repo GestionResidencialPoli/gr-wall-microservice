@@ -90,3 +90,25 @@ que el mecanismo no depende de en qué réplica esté conectado cada residente.
 Documento aprobado. Se decide implementar: la historia correspondiente para la versión de producción se crea en
 el backlog de la etapa 2 cuando se planifique TEC-2.3 (interfaz Next.js), ya que el consumidor real de este
 endpoint es el frontend del residente.
+
+## Addendum · Transporte del evento: de Redis pub/sub a RabbitMQ
+
+Al llevar el prototipo a producción (GR-145) se cambió el transporte de **Redis pub/sub** a un **exchange
+`fanout` durable de RabbitMQ** (`gr.wall.events`). La decisión de multi-réplica de este ADR (algo compartido
+entre réplicas para que el evento llegue sin importar cuál atendió la escritura) no cambia; lo que cambia es la
+pieza concreta que lo implementa.
+
+Motivo: Redis pub/sub entrega el mensaje únicamente a los suscriptores conectados en el instante exacto de la
+publicación — si una réplica está reiniciando o momentáneamente caída, ese evento se pierde para ella sin
+ningún aviso. RabbitMQ resuelve esto con colas: un consumidor con una cola declarada (durable o exclusiva)
+recibe los mensajes acumulados en cuanto se reconecta, en vez de perderlos. Para el caso de uso actual (SSE de
+clientes efímeros) esa garantía no importa demasiado — la cola es exclusiva y se descarta con la conexión del
+navegador — pero sí importa para cualquier futuro consumidor de tipo servicio (por ejemplo, un servicio de
+notificaciones push) que necesite no perder eventos mientras está caído, que es exactamente el escenario que
+Redis pub/sub no cubre.
+
+Redis se mantiene en el repositorio, pero exclusivamente para el cache de `GET /api/v1/publicaciones`.
+
+También se implementó, junto con este cambio, el punto pendiente de autenticación del endpoint SSE señalado
+arriba: `GET /api/v1/publicaciones/eventos` ahora exige el mismo `authenticate`/`requireAuthentication` que el
+resto de la API.

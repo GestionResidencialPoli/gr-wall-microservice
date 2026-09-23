@@ -33,6 +33,9 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      - name: Pruebas unitarias
+        run: pnpm test
+
       - name: Build
         run: pnpm build
 
@@ -67,7 +70,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Levantar Postgres y Redis para la prueba
+      - name: Levantar Postgres, Redis y RabbitMQ para la prueba
         env:
           CI_DB_PASSWORD: ${{ secrets.CI_DB_PASSWORD }}
         run: |
@@ -75,9 +78,14 @@ jobs:
             -e POSTGRES_DB=gr_wall_db -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD="$CI_DB_PASSWORD" \
             -p 5432:5432 postgres:16-alpine
           docker run -d --name redis-smoke -p 6379:6379 redis:7-alpine
+          docker run -d --name rabbitmq-smoke -p 5672:5672 rabbitmq:4-alpine
           for i in $(seq 1 30); do
             docker exec postgres-smoke pg_isready -U postgres && break
             sleep 1
+          done
+          for i in $(seq 1 30); do
+            docker exec rabbitmq-smoke rabbitmq-diagnostics -q ping && break
+            sleep 2
           done
 
       - name: Correr migraciones
@@ -98,6 +106,7 @@ jobs:
             --network host \
             -e DB_HOST=localhost -e DB_PORT=5432 -e DB_USERNAME=postgres -e DB_PASSWORD="$CI_DB_PASSWORD" -e DB_NAME=gr_wall_db \
             -e REDIS_URL=redis://localhost:6379 \
+            -e RABBITMQ_URL=amqp://localhost:5672 \
             -e JWT_SECRET="$CI_JWT_SECRET" \
             -e INTERNAL_SERVICE_TOKEN="$CI_INTERNAL_SERVICE_TOKEN" \
             -e USER_SERVICE_URL=http://localhost:8080 \

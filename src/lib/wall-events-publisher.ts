@@ -1,4 +1,4 @@
-import redis from "./redis-client";
+import RabbitMqClient from "./rabbitmq-client";
 import config from "../config";
 import Logger from "./logger";
 
@@ -14,7 +14,8 @@ export interface WallEvent {
 class WallEventsPublisher {
   public static async publish(event: WallEvent): Promise<void> {
     try {
-      await redis.publish(config.redis.eventsChannel, JSON.stringify(event));
+      const channel = await RabbitMqClient.getChannel();
+      channel.publish(config.rabbitmq.eventsExchange, "", Buffer.from(JSON.stringify(event)), { persistent: true });
     } catch (error) {
       Logger.warn("No se pudo publicar el evento del muro", { error: (error as Error).message, event });
     }

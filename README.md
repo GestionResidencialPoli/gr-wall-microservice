@@ -24,22 +24,24 @@ pnpm db:ensure       # crea gr_wall_db en el contenedor si no existe
 pnpm migrate:latest  # aplica las migraciones
 ```
 
-## Cache y eventos (Redis)
+## Cache (Redis) y eventos en tiempo real (RabbitMQ)
 
-Usa el Redis ya existente en el homelab, para dos cosas:
-
-- **Cache** de `GET /api/v1/publicaciones` (el endpoint de mayor volumen de lectura): TTL corto + invalidacion
-  por version (cualquier escritura incrementa un contador, lo que invalida todas las paginas cacheadas de una vez,
-  sin necesidad de borrar claves por patron).
-- **Pub/Sub**: publica `post.created` / `post.updated` / `post.retired` en el canal `gr:wall:events`. Hoy nadie
-  lo consume todavia — es la base para la notificacion en tiempo real que evalua `SPIKE-2.1`, sin acoplar este
-  servicio a como se resuelva esa decision.
+- **Cache** en Redis (el mismo contenedor ya existente en el homelab) de `GET /api/v1/publicaciones` (el
+  endpoint de mayor volumen de lectura): TTL corto + invalidacion por version (cualquier escritura incrementa un
+  contador, lo que invalida todas las paginas cacheadas de una vez, sin necesidad de borrar claves por patron).
+- **Eventos** (`post.created` / `post.updated` / `post.retired`) se publican en un exchange `fanout` durable de
+  RabbitMQ (`gr.wall.events`), no en Redis: a diferencia de Redis pub/sub, una cola de RabbitMQ retiene los
+  mensajes para un consumidor que se reconecta, en vez de perderlos si nadie estaba escuchando en el instante de
+  la publicacion. `GET /api/v1/publicaciones/eventos` (SSE) es hoy el unico consumidor: cada conexion declara su
+  propia cola exclusiva y auto-eliminable enlazada al exchange (vive solo mientras dura la conexion del
+  cliente); ver `docs/decisiones/ADR-002-notificacion-tiempo-real.md`.
 
 ## Autenticacion
 
 Igual que `gr-api-gateway`: lee el JWT de la cookie `access_token` y lo verifica localmente con el mismo secreto
 HMAC-SHA256 que usa `gr-user-microservice` (`JWT_SECRET`). No hay sesion compartida ni llamada a otro servicio
-para autenticar — cada microservicio detras del gateway valida el token por su cuenta.
+para autenticar — cada microservicio detras del gateway valida el token por su cuenta, incluyendo el endpoint
+SSE de eventos.
 
 ## Reglas de negocio relevantes
 
