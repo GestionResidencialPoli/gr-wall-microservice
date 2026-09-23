@@ -6,6 +6,7 @@ import morgan from "morgan";
 import http from "http";
 import rateLimit from "express-rate-limit";
 import config from "./config";
+import eventsRouter from "./routers/events-router";
 
 const globalRateLimiter = rateLimit({
   windowMs: config.rateLimit.windowMs,
@@ -44,6 +45,8 @@ class Server {
     this.app.get("/health", (_req, res) => {
       res.json({ status: "ok" });
     });
+
+    this.app.use("/api/v1/publicaciones/eventos", eventsRouter());
   }
 }
 
