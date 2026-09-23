@@ -68,9 +68,11 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Levantar Postgres y Redis para la prueba
+        env:
+          CI_DB_PASSWORD: ${{ secrets.CI_DB_PASSWORD }}
         run: |
           docker run -d --name postgres-smoke \
-            -e POSTGRES_DB=gr_wall_db -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres \
+            -e POSTGRES_DB=gr_wall_db -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD="$CI_DB_PASSWORD" \
             -p 5432:5432 postgres:16-alpine
           docker run -d --name redis-smoke -p 6379:6379 redis:7-alpine
           for i in $(seq 1 30); do
@@ -79,19 +81,25 @@ jobs:
           done
 
       - name: Correr migraciones
+        env:
+          CI_DB_PASSWORD: ${{ secrets.CI_DB_PASSWORD }}
         run: |
           docker run --rm --network host \
-            -e DB_HOST=localhost -e DB_PORT=5432 -e DB_USERNAME=postgres -e DB_PASSWORD=postgres -e DB_NAME=gr_wall_db \
+            -e DB_HOST=localhost -e DB_PORT=5432 -e DB_USERNAME=postgres -e DB_PASSWORD="$CI_DB_PASSWORD" -e DB_NAME=gr_wall_db \
             gr-wall-microservice:ci-migrate
 
       - name: Arrancar el contenedor y validar /health
+        env:
+          CI_DB_PASSWORD: ${{ secrets.CI_DB_PASSWORD }}
+          CI_JWT_SECRET: ${{ secrets.CI_JWT_SECRET }}
+          CI_INTERNAL_SERVICE_TOKEN: ${{ secrets.CI_INTERNAL_SERVICE_TOKEN }}
         run: |
           docker run -d --name app-smoke \
             --network host \
-            -e DB_HOST=localhost -e DB_PORT=5432 -e DB_USERNAME=postgres -e DB_PASSWORD=postgres -e DB_NAME=gr_wall_db \
+            -e DB_HOST=localhost -e DB_PORT=5432 -e DB_USERNAME=postgres -e DB_PASSWORD="$CI_DB_PASSWORD" -e DB_NAME=gr_wall_db \
             -e REDIS_URL=redis://localhost:6379 \
-            -e JWT_SECRET=ci-secreto-de-al-menos-32-caracteres-para-pruebas \
-            -e INTERNAL_SERVICE_TOKEN=ci-secreto-de-al-menos-32-caracteres-para-pruebas \
+            -e JWT_SECRET="$CI_JWT_SECRET" \
+            -e INTERNAL_SERVICE_TOKEN="$CI_INTERNAL_SERVICE_TOKEN" \
             -e USER_SERVICE_URL=http://localhost:8080 \
             gr-wall-microservice:ci
 
