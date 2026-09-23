@@ -5,7 +5,12 @@ import helmet from "helmet";
 import morgan from "morgan";
 import http from "http";
 import rateLimit from "express-rate-limit";
+import swaggerUi from "swagger-ui-express";
 import config from "./config";
+import postRouter from "./routers/post-router";
+import authenticate from "./middlewares/authenticate";
+import handleError from "./middlewares/handle-error";
+import openapi from "./docs/openapi";
 import eventsRouter from "./routers/events-router";
 
 const globalRateLimiter = rateLimit({
@@ -29,6 +34,7 @@ class Server {
   private setup(): void {
     this.useMiddleware();
     this.mountRoutes();
+    this.app.use(handleError);
   }
 
   private useMiddleware(): void {
@@ -39,6 +45,7 @@ class Server {
     this.app.use(express.json());
     this.app.use(morgan(config.env === "production" ? "combined" : "dev"));
     this.app.use(globalRateLimiter);
+    this.app.use(authenticate);
   }
 
   private mountRoutes(): void {
@@ -46,7 +53,12 @@ class Server {
       res.json({ status: "ok" });
     });
 
+    if (config.env !== "production") {
+      this.app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openapi));
+    }
+
     this.app.use("/api/v1/publicaciones/eventos", eventsRouter());
+    this.app.use("/api/v1/publicaciones", postRouter());
   }
 }
 

@@ -40,6 +40,7 @@ const config = {
     eventsChannel: process.env.WALL_EVENTS_CHANNEL ?? "gr:wall:events",
   },
   userServiceUrl: process.env.USER_SERVICE_URL ?? "http://localhost:8080",
+  internalServiceToken: required("INTERNAL_SERVICE_TOKEN"),
   rateLimit: {
     windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS ?? 60_000),
     max: Number(process.env.RATE_LIMIT_MAX ?? 300),

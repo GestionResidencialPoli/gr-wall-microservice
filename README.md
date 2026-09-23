@@ -72,3 +72,4 @@ Documentacion OpenAPI disponible en `/api-docs` fuera de produccion.
 - `pnpm lint` / `pnpm lint:fix`
 - `pnpm typecheck`
 - `pnpm migrate:make|latest|rollback|list`
+
