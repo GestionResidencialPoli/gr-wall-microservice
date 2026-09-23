@@ -37,7 +37,10 @@ const config = {
   redis: {
     url: process.env.REDIS_URL ?? "redis://localhost:6379",
     cacheTtlSeconds: Number(process.env.WALL_CACHE_TTL_SECONDS ?? 30),
-    eventsChannel: process.env.WALL_EVENTS_CHANNEL ?? "gr:wall:events",
+  },
+  rabbitmq: {
+    url: process.env.RABBITMQ_URL ?? "amqp://localhost:5672",
+    eventsExchange: process.env.WALL_EVENTS_EXCHANGE ?? "gr.wall.events",
   },
   userServiceUrl: process.env.USER_SERVICE_URL ?? "http://localhost:8080",
   internalServiceToken: required("INTERNAL_SERVICE_TOKEN"),
