@@ -128,3 +128,16 @@ jobs:
       - name: Logs (si algo fallo)
         if: failure()
         run: docker logs app-smoke || true
+
+  release:
+    name: Build y desplegar
+    needs: [build-and-check, docker-smoke-test]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    uses: GestionResidencialPoli/gr-infra/.github/workflows/build-push.yml@main
+    with:
+      service-name: gr-wall-microservice
+      compose-service: wall-microservice
+      migrate-target: true
+    secrets:
+      JENKINS_WEBHOOK_URL: ${{ secrets.JENKINS_WEBHOOK_URL }}
+      JENKINS_WEBHOOK_TOKEN: ${{ secrets.JENKINS_WEBHOOK_TOKEN }}
