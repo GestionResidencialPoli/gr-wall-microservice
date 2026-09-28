@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import PostValidator from "./post-validator";
 
 const validInput = {
@@ -55,5 +55,25 @@ describe("PostValidator.listQuery", () => {
 
   it("rechaza page negativo", () => {
     expect(() => PostValidator.listQuery({ page: "-1" })).toThrow();
+  });
+
+  describe("vigencia en hora de Colombia", () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("acepta la fecha de hoy en Colombia aunque en UTC ya sea el dia siguiente", () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date("2030-03-10T02:30:00Z"));
+
+      expect(PostValidator.create({ ...validInput, vigenciaHasta: "2030-03-09" }).vigenciaHasta).toBe("2030-03-09");
+    });
+
+    it("rechaza ayer en Colombia", () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date("2030-03-10T02:30:00Z"));
+
+      expect(() => PostValidator.create({ ...validInput, vigenciaHasta: "2030-03-08" })).toThrow();
+    });
   });
 });

@@ -1,10 +1,17 @@
 import { z } from "zod";
+import config from "../config";
 import { CATEGORIAS_PUBLICACION } from "../types/enums/categoria-publicacion";
+
+function hoyEnColombia(): string {
+  const [signo, horas, minutos] = [config.zonaHoraria.offset[0], ...config.zonaHoraria.offset.slice(1).split(":")];
+  const desfaseMs = (Number(horas) * 60 + Number(minutos)) * 60_000 * (signo === "-" ? -1 : 1);
+  return new Date(Date.now() + desfaseMs).toISOString().slice(0, 10);
+}
 
 const vigenciaHastaSchema = z
   .string()
   .date()
-  .refine((value) => value >= new Date().toISOString().slice(0, 10), {
+  .refine((value) => value >= hoyEnColombia(), {
     message: "La fecha de vigencia no puede ser anterior a hoy.",
   })
   .nullable()
