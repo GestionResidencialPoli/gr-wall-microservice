@@ -44,6 +44,9 @@ const config = {
   },
   userServiceUrl: process.env.USER_SERVICE_URL ?? "http://localhost:8080",
   internalServiceToken: required("INTERNAL_SERVICE_TOKEN"),
+  zonaHoraria: {
+    offset: process.env.TIMEZONE_OFFSET ?? "-05:00",
+  },
   rateLimit: {
     windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS ?? 60_000),
     max: Number(process.env.RATE_LIMIT_MAX ?? 300),
