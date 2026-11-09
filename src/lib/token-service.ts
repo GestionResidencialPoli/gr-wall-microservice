@@ -10,6 +10,13 @@ export interface AccessTokenClaims {
   tipoResidente?: string;
 }
 
+interface WallEventsTicketClaims {
+  sub: string;
+  uid: number;
+  roles: UserRole[];
+  scope: "wall-events";
+}
+
 function isAccessTokenClaims(payload: JwtPayload): payload is JwtPayload & AccessTokenClaims {
   return (
     typeof payload.sub === "string" &&
@@ -25,6 +32,33 @@ class TokenService {
       const payload = jwt.verify(token, config.jwtSecret, { algorithms: ["HS256"] });
 
       if (typeof payload === "string" || !isAccessTokenClaims(payload)) {
+        return null;
+      }
+
+      return {
+        sub: payload.sub,
+        uid: payload.uid,
+        roles: payload.roles,
+        tipoResidente: payload.tipoResidente,
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  public static createWallEventsTicket(claims: AccessTokenClaims): string {
+    return jwt.sign(
+      { sub: claims.sub, uid: claims.uid, roles: claims.roles, scope: "wall-events" } satisfies WallEventsTicketClaims,
+      config.jwtSecret,
+      { algorithm: "HS256", expiresIn: "60s" },
+    );
+  }
+
+  public static verifyWallEventsTicket(token: string): AccessTokenClaims | null {
+    try {
+      const payload = jwt.verify(token, config.jwtSecret, { algorithms: ["HS256"] });
+
+      if (typeof payload === "string" || payload.scope !== "wall-events" || !isAccessTokenClaims(payload)) {
         return null;
       }
 
