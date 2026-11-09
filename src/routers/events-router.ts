@@ -4,11 +4,16 @@ import RabbitMqClient from "../lib/rabbitmq-client";
 import config from "../config";
 import Logger from "../lib/logger";
 import requireAuthentication from "../middlewares/require-authentication";
+import TokenService from "../lib/token-service";
 
 const HEARTBEAT_INTERVAL_MS = 20_000;
 
 function eventsRouter(): Router {
   const router = Router();
+
+  router.get("/ticket", requireAuthentication, (req, res) => {
+    res.json({ payload: { ticket: TokenService.createWallEventsTicket(req.auth!) } });
+  });
 
   router.get("/", requireAuthentication, async (req, res) => {
     res.writeHead(200, {

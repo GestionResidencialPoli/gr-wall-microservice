@@ -32,9 +32,10 @@ pnpm migrate:latest  # aplica las migraciones
 - **Eventos** (`post.created` / `post.updated` / `post.retired`) se publican en un exchange `fanout` durable de
   RabbitMQ (`gr.wall.events`), no en Redis: a diferencia de Redis pub/sub, una cola de RabbitMQ retiene los
   mensajes para un consumidor que se reconecta, en vez de perderlos si nadie estaba escuchando en el instante de
-  la publicacion. `GET /api/v1/publicaciones/eventos` (SSE) es hoy el unico consumidor: cada conexion declara su
-  propia cola exclusiva y auto-eliminable enlazada al exchange (vive solo mientras dura la conexion del
-  cliente); ver `docs/decisiones/ADR-002-notificacion-tiempo-real.md`.
+  la publicacion. `GET /api/v1/publicaciones/eventos/ws` entrega los eventos mediante WebSocket; antes de abrirlo,
+  el cliente obtiene un ticket temporal en `GET /api/v1/publicaciones/eventos/ticket`. Cada conexion declara su
+  propia cola exclusiva y auto-eliminable enlazada al exchange. El endpoint SSE `GET /api/v1/publicaciones/eventos`
+  se conserva para compatibilidad con consumidores existentes.
 
 ## Autenticacion
 

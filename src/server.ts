@@ -12,6 +12,7 @@ import authenticate from "./middlewares/authenticate";
 import handleError from "./middlewares/handle-error";
 import openapi from "./docs/openapi";
 import eventsRouter from "./routers/events-router";
+import WallEventsWebSocket from "./lib/wall-events-websocket";
 
 const globalRateLimiter = rateLimit({
   windowMs: config.rateLimit.windowMs,
@@ -29,6 +30,7 @@ class Server {
     this.app = express();
     this.httpServer = http.createServer(this.app);
     this.setup();
+    WallEventsWebSocket.attach(this.httpServer);
   }
 
   private setup(): void {
