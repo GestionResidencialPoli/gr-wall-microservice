@@ -43,6 +43,7 @@
     "morgan": "^1.12.1",
     "pg": "^8.23.0",
     "swagger-ui-express": "^5.0.1",
+    "ws": "^8.18.3",
     "zod": "^4.6.5"
   },
   "devDependencies": {
@@ -56,6 +57,7 @@
     "@types/node": "^26.6.2",
     "@types/pg": "^8.23.1",
     "@types/swagger-ui-express": "^4.1.8",
+    "@types/ws": "^8.18.1",
     "eslint": "^10.11.0",
     "eslint-config-prettier": "^10.1.8",
     "husky": "^9.1.7",
