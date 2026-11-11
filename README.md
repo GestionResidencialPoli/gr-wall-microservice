@@ -33,14 +33,18 @@ pnpm migrate:latest  # aplica las migraciones
   RabbitMQ (`gr.wall.events`), no en Redis: a diferencia de Redis pub/sub, una cola de RabbitMQ retiene los
   mensajes para un consumidor que se reconecta, en vez de perderlos si nadie estaba escuchando en el instante de
   la publicacion. `GET /api/v1/publicaciones/eventos/ws` entrega los eventos mediante WebSocket; antes de abrirlo,
-  el cliente obtiene un ticket temporal en `GET /api/v1/publicaciones/eventos/ticket`. Cada conexion declara su
+  el cliente obtiene un ticket en `GET /api/v1/publicaciones/eventos/ticket`. El ticket dura 60 segundos, es de un
+  solo uso (su `jti` se consume en Redis con `SET NX`), va cifrado igual que el access token y se firma con una clave
+  derivada exclusiva (`HMAC-SHA256(JWT_SECRET, "wall-events-ticket")`), de modo que ningun otro servicio lo acepta
+  como access token aunque viaje en la URL. Cada conexion declara su
   propia cola exclusiva y auto-eliminable enlazada al exchange. El endpoint SSE `GET /api/v1/publicaciones/eventos`
   se conserva para compatibilidad con consumidores existentes.
 
 ## Autenticacion
 
 Igual que `gr-api-gateway`: lee el JWT de la cookie `access_token` y lo verifica localmente con el mismo secreto
-HMAC-SHA256 que usa `gr-user-microservice` (`JWT_SECRET`). No hay sesion compartida ni llamada a otro servicio
+HMAC-SHA256 que usa `gr-user-microservice` (`JWT_SECRET`), despues de descifrarlo con `JWT_ENCRYPTION_KEY` (el token
+es un JWS cifrado como JWE `dir` + `A256GCM`; ver `src/lib/jwe.ts`). Un JWT sin cifrar se rechaza. No hay sesion compartida ni llamada a otro servicio
 para autenticar — cada microservicio detras del gateway valida el token por su cuenta, incluyendo el endpoint
 SSE de eventos.
 
