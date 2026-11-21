@@ -13,6 +13,7 @@ import handleError from "./middlewares/handle-error";
 import openapi from "./docs/openapi";
 import eventsRouter from "./routers/events-router";
 import WallEventsWebSocket from "./lib/wall-events-websocket";
+import graphqlRouter from "./routers/graphql-router";
 
 const globalRateLimiter = rateLimit({
   windowMs: config.rateLimit.windowMs,
@@ -61,6 +62,7 @@ class Server {
 
     this.app.use("/api/v1/publicaciones/eventos", eventsRouter());
     this.app.use("/api/v1/publicaciones", postRouter());
+    this.app.use("/graphql", graphqlRouter());
   }
 }
 
