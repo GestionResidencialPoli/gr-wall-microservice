@@ -61,8 +61,8 @@ class Server {
     }
 
     this.app.use("/api/v1/publicaciones/eventos", eventsRouter());
+    this.app.use("/api/v1/publicaciones/graphql", graphqlRouter());
     this.app.use("/api/v1/publicaciones", postRouter());
-    this.app.use("/graphql", graphqlRouter());
   }
 }
 

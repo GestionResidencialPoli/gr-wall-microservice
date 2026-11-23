@@ -50,12 +50,16 @@ SSE de eventos.
 
 ## API GraphQL
 
-El muro expone una API GraphQL en `POST /graphql`. El gateway publica la misma ruta, por lo que el cliente local
-puede usar `http://localhost:4000/graphql`. La API reutiliza `PostService`, el validador, la cache y los eventos
-existentes; no crea un segundo CRUD con reglas diferentes.
+El muro expone una API GraphQL en `POST /api/v1/publicaciones/graphql`. Al vivir bajo el prefijo del servicio, el
+gateway, nginx, el Ingress y el rewrite de Next ya la enrutan sin configuracion adicional; `/graphql` queda para
+finanzas. La API reutiliza `PostService`, el validador, la cache y los eventos existentes; no crea un segundo CRUD
+con reglas diferentes.
 
 Las consultas de lectura requieren autenticacion. Las mutaciones requieren el rol `ADMINISTRACION` y mantienen la
 eliminacion logica, la vigencia, el limite de tres publicaciones fijadas y la publicacion de eventos RabbitMQ.
+
+Cada solicitud admite como maximo cinco operaciones raiz y respeta la cabecera `Idempotency-Key`. Los errores
+inesperados se registran y se devuelven como `INTERNAL_SERVER_ERROR`, sin detalles internos.
 
 Ejemplo de consulta:
 
