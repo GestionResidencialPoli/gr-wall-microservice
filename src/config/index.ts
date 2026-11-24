@@ -58,7 +58,11 @@ const config = {
     url: process.env.RABBITMQ_URL ?? "amqp://localhost:5672",
     eventsExchange: process.env.WALL_EVENTS_EXCHANGE ?? "gr.wall.events",
   },
-  userServiceUrl: process.env.USER_SERVICE_URL ?? "http://localhost:8080",
+  communications: {
+    url: process.env.COMMUNICATIONS_WS_URL ?? "ws://localhost:4600/internal/ws",
+    timeoutMs: Number(process.env.COMMUNICATIONS_TIMEOUT_MS ?? 5_000),
+    silenceLimitMs: Number(process.env.COMMUNICATIONS_SILENCE_LIMIT_MS ?? 60_000),
+  },
   internalServiceToken: required("INTERNAL_SERVICE_TOKEN"),
   zonaHoraria: {
     offset: process.env.TIMEZONE_OFFSET ?? "-05:00",
