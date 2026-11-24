@@ -48,6 +48,35 @@ es un JWS cifrado como JWE `dir` + `A256GCM`; ver `src/lib/jwe.ts`). Un JWT sin 
 para autenticar — cada microservicio detras del gateway valida el token por su cuenta, incluyendo el endpoint
 SSE de eventos.
 
+## API GraphQL
+
+El muro expone una API GraphQL en `POST /api/v1/publicaciones/graphql`. Al vivir bajo el prefijo del servicio, el
+gateway, nginx, el Ingress y el rewrite de Next ya la enrutan sin configuracion adicional; `/graphql` queda para
+finanzas. La API reutiliza `PostService`, el validador, la cache y los eventos existentes; no crea un segundo CRUD
+con reglas diferentes.
+
+Las consultas de lectura requieren autenticacion. Las mutaciones requieren el rol `ADMINISTRACION` y mantienen la
+eliminacion logica, la vigencia, el limite de tres publicaciones fijadas y la publicacion de eventos RabbitMQ.
+
+Cada solicitud admite como maximo cinco operaciones raiz y respeta la cabecera `Idempotency-Key`. Los errores
+inesperados se registran y se devuelven como `INTERNAL_SERVER_ERROR`, sin detalles internos.
+
+Ejemplo de consulta:
+
+```graphql
+query {
+  publicaciones(page: 0, size: 10, categoria: AVISO) {
+    content { id titulo categoria fijada createdAt }
+    totalElements
+    totalPages
+  }
+}
+```
+
+El CRUD se expone mediante `publicaciones` y `publicacion` para lectura, y las mutaciones `crearPublicacion`,
+`actualizarPublicacion` y `eliminarPublicacion`. Las mutaciones `fijarPublicacion` y `desfijarPublicacion` cubren
+las acciones propias del tablero.
+
 ## Reglas de negocio relevantes
 
 - Categorias fijas: `AVISO`, `NOTICIA`, `URGENTE`, `MANTENIMIENTO` (almacenadas como texto, no como ordinal).
